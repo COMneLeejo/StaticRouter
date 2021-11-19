@@ -217,8 +217,31 @@ public class ARPLayer implements BaseLayer {
         String target_mac = arp_request_array[2];
         String target_ip = arp_request_array[3];
 
-        if (sender_ip.equals(target_ip)) {
-            //GARP
+
+
+        if (opcode[0] == 0x00 && opcode[1] == 0x01) {
+            this.target_mac_addr = host_mac_addr;
+
+            //opcode 2로 변경(reply)
+            byte[] newOpcode = new byte[2];
+            newOpcode[0] = (byte) 0x00;
+            newOpcode[1] = (byte) 0x02;
+
+            // 케시 테이블 업데이트
+            if (!cache_table.containsKey(ipByteArrToString(this.sender_ip_addr))) {
+                value[0] = cache_table.size();
+                value[1] = this.sender_mac_addr;
+                value[2] = "Complete";
+                value[3] = System.currentTimeMillis();
+            }
+            cache_table.put(ipByteArrToString(this.sender_ip_addr), value);
+            updateCacheTable();
+
+            //target과 sender를 swapping하여 send
+            this.send(this.target_mac_addr, this.target_ip_addr, this.sender_mac_addr, this.sender_ip_addr, newOpcode);
+        }
+
+        if (opcode[0] == 0x00 && opcode[1] == 0x02) {
             if (!cache_table.containsKey(sender_ip)) {
                 //cache_table에 존재하지 않을 경우
                 value[0] = cache_table.size();
@@ -229,69 +252,14 @@ public class ARPLayer implements BaseLayer {
                 //cache_table에 존재하는 경우
                 value[0] = cache_table.get(sender_ip)[0];
                 value[1] = this.sender_mac_addr;
-                value[2] = cache_table.get(sender_ip)[2];
+                value[2] = "Complete";
                 value[3] = System.currentTimeMillis();
             }
             cache_table.put(sender_ip, value);
             updateCacheTable();
             return true;
-        } else if (this.proxy_table.containsKey(target_ip)) {
-            //Proxy
-            byte[] proxy_target_mac = (byte[]) this.proxy_table.get(target_ip)[1];
-
-            //opcode 2로 변경(reply)
-            byte[] newOpcode = new byte[2];
-            newOpcode[0] = (byte) 0x00;
-            newOpcode[1] = (byte) 0x02;
-
-            //target과 sender를 swapping하여 send
-            this.send(proxy_target_mac, this.target_ip_addr, this.sender_mac_addr, this.sender_ip_addr, newOpcode);
-            return true;
-
-        } else {
-
-            if (opcode[0] == 0x00 && opcode[1] == 0x01) {
-                this.target_mac_addr = host_mac_addr;
-
-                //opcode 2로 변경(reply)
-                byte[] newOpcode = new byte[2];
-                newOpcode[0] = (byte) 0x00;
-                newOpcode[1] = (byte) 0x02;
-
-                // 케시 테이블 업데이트
-                if (!cache_table.containsKey(ipByteArrToString(this.sender_ip_addr))) {
-                    value[0] = cache_table.size();
-                    value[1] = this.sender_mac_addr;
-                    value[2] = "Complete";
-                    value[3] = System.currentTimeMillis();
-                }
-                cache_table.put(ipByteArrToString(this.sender_ip_addr), value);
-                updateCacheTable();
-
-                //target과 sender를 swapping하여 send
-                this.send(this.target_mac_addr, this.target_ip_addr, this.sender_mac_addr, this.sender_ip_addr, newOpcode);
-            }
-
-            if (opcode[0] == 0x00 && opcode[1] == 0x02) {
-                if (!cache_table.containsKey(sender_ip)) {
-                    //cache_table에 존재하지 않을 경우
-                    value[0] = cache_table.size();
-                    value[1] = this.sender_mac_addr;
-                    value[2] = "Complete";
-                    value[3] = System.currentTimeMillis();
-                } else {
-                    //cache_table에 존재하는 경우
-                    value[0] = cache_table.get(sender_ip)[0];
-                    value[1] = this.sender_mac_addr;
-                    value[2] = "Complete";
-                    value[3] = System.currentTimeMillis();
-                }
-                cache_table.put(sender_ip, value);
-                updateCacheTable();
-                return true;
-            }
-            return true;
         }
+        return true;
 
     }
 
@@ -405,7 +373,7 @@ public class ARPLayer implements BaseLayer {
      *
      * @param ip_byte_arr byte 배열형의 ip 주소
      * @return String 형태의 ip 주소
-     */
+     */]
     public String ipByteArrToString(byte[] ip_byte_arr) {
         return (ip_byte_arr[0] & 0xFF) + "." + (ip_byte_arr[1] & 0xFF) + "."
                 + (ip_byte_arr[2] & 0xFF) + "." + (ip_byte_arr[3] & 0xFF);
