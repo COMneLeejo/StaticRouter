@@ -9,6 +9,10 @@ public class ARPLayer implements BaseLayer {
     public BaseLayer p_under_layer = null;  // present - 하위 레이어
     public ArrayList<BaseLayer> p_upper_layer_list = new ArrayList<>();    // 상위 레이어 저장 리스트
 
+
+    // TODO : PortName 위한 변수 지정 필요
+    String portName;
+
     HashMap<String, Object[]> cache_table = new HashMap<>();
     HashMap<String, Object[]> proxy_table = new HashMap<>();
 
@@ -109,18 +113,17 @@ public class ARPLayer implements BaseLayer {
      * @return boolean 타입
      */
     public boolean send(byte[] _sender_mac_addr, byte[] _sender_ip_addr, byte[] _target_mac_addr,
-                        byte[] _target_ip_addr, byte[] _op_code) {
+                        byte[] _target_ip_addr, byte[] _op_code //, String portName
+                         ) {
         // hard_type -> 1 로 고정
         // prot_type -> 0x0800 로 고정
         // hard_size -> 6, prot_size -> 4 (byte) 로 고정
 
-        // TODO : 이미 캐시 테이블에 있는 경우, Basic, Proxy, GARP 에 따라 구현 필요
-        //      -> Basic    : _sender_mac_addr, _sender_op_addr, _target_ip_addr 존재, _target_mac_addr : ????
-        //                  : incomplete -> complete 단계 수행
-        //      -> Proxy    : Basic과 동일한 형태의 매개변수 전달 받음
-        //                  : 상대 proxy table 확인 절차 필요
-        //      -> GARP     : sender 와 target ip 주소가 같음
-        //                  : 상대 table 모두 mac 주소 갱신
+        // TODO :
+        //      : 1. 다른 IP 레이어에서 넘어온 IP와 MAC 주소 ARP 테이블에서 확인 --> 없는 경우 업데이트, Port Name도 함께 케시 업데이트
+        //      : 2. 이후 send
+        //      : opcode가 pingtest에 영향이 있을까 ? 현재 request 기준으로 구현됨 아닌 경우 opcode 0x0001일때만 update하고
+        //      : 나머지 opcode는 무시하고 send
 
         String target_ip_string = ipByteArrToString(_target_ip_addr);
         Object[] value = new Object[4];
@@ -137,6 +140,7 @@ public class ARPLayer implements BaseLayer {
                     value = Arrays.copyOf(cache_table.get(target_ip_string), cache_table.get(target_ip_string).length);
                 }
             } else {
+                // TODO : port 정보 넣어주자
                 // 이 외의 경우는 모두 "Incomplete" 상태
                 // value[0]: 현재 테이블의 크기, value[1]: 상대방 mac 주소, value[2]: 상태, value[3]: 현재 시간
                 value[0] = cache_table.size() + 1;  // ??
@@ -184,28 +188,12 @@ public class ARPLayer implements BaseLayer {
     @Override
     public boolean receive(byte[] input) {
 
-        //TODO: 1. garp : senderIp == targetIp
-        //          (1)CacheTable에서 senderIP 찾기
-        //          (2)있으면 변경
-        //          (3)없으면 추가
-        //      2. Proxy : ProxyTable에 TargetIp가 존재하는 지 검사
-        //          <존재하는 경우>
-        //              (1)targetMac 추가
-        //              (2)opcode 2로 변경
-        //              (3)Swapping
-        //              (4)Send
-        //          <존재하지 않는 경우>
-        //              (1)Drop -> return false
-        //      3. Basic
-        //          (1)targetMac = host_mac_addr
-        //          (2)Opcode = 2 로 변경
-        //          (3)Swapping
-        //          (4)Send
-        //
+        // TODO : cacheTable에서 정보 update 시 port 정보 추가
+
         if(input == null){
             return false;
         }
-        Object[] value = new Object[4];
+        Object[] value = new Object[4]; // TODO : 4 -> 5로 바꾸자
         byte[] opcode = new byte[2];
         System.arraycopy(input, 6, opcode, 0, 2);
 
@@ -229,6 +217,7 @@ public class ARPLayer implements BaseLayer {
 
             // 케시 테이블 업데이트
             if (!cache_table.containsKey(ipByteArrToString(this.sender_ip_addr))) {
+                // TODO : port 정보 넣어주자
                 value[0] = cache_table.size();
                 value[1] = this.sender_mac_addr;
                 value[2] = "Complete";
@@ -243,12 +232,14 @@ public class ARPLayer implements BaseLayer {
 
         if (opcode[0] == 0x00 && opcode[1] == 0x02) {
             if (!cache_table.containsKey(sender_ip)) {
+                // TODO : port 정보 넣어주자
                 //cache_table에 존재하지 않을 경우
                 value[0] = cache_table.size();
                 value[1] = this.sender_mac_addr;
                 value[2] = "Complete";
                 value[3] = System.currentTimeMillis();
             } else {
+                // TODO : port 정보 넣어주자
                 //cache_table에 존재하는 경우
                 value[0] = cache_table.get(sender_ip)[0];
                 value[1] = this.sender_mac_addr;
@@ -333,7 +324,8 @@ public class ARPLayer implements BaseLayer {
      * 케시 테이블 업데이트
      */
     public void updateCacheTable() {
-        // TODO: Application layer 과 연동 필요
+        // TODO: PORT 정보 넣어주자
+
         ApplicationLayer.arp_textarea.setText("");
 
         Set keys = cache_table.keySet();
@@ -345,13 +337,15 @@ public class ARPLayer implements BaseLayer {
                 // TODO: Trash 값 없애기
 //                ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t trash\n");
             } else if (value[2].equals("Incomplete")) {
-                // TODO: Incomplete 상태 Application layer에 업데이트
-                ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t incomplete\n");
+                // TODO: Port Name 정보 입력 필요
+                ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t incomplete \t " + // value[5] (포트 이름) + ""
+                        "portName\n");
             } else {
                 byte[] mac_addr_byte = (byte[]) value[1];
                 String mac_address_string = macByteArrToString(mac_addr_byte);
-                // TODO: Application layer 업데이트
-                ApplicationLayer.arp_textarea.append("       " + key + "\t" + mac_address_string + "\t complete\n");
+                // TODO: Port Name 관련 정보 입력
+                ApplicationLayer.arp_textarea.append("       " + key + "\t" + mac_address_string + "\t complete\t" + // value[5] (포트 이름) + ""
+                        " portName\n");
             }
         }
     }
