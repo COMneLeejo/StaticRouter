@@ -116,27 +116,20 @@ public class EthernetLayer implements BaseLayer {
     public boolean send(byte[] input, int length) {
         m_sHeader.enet_data = input;
 
-
         if (m_sHeader.enet_data != null && m_sHeader.enet_data.length > 1500) {
             return false;
         }
 
+        byte[] frame;                           //(Header + input)전체 frame
+        byte[] dst_addr = new byte[6];          //도착지 mac주소
 
-        byte[] frame;   //(Header + input)전체 frame
-        byte[] src_addr = new byte[6];  //출발지 mac주소
-        byte[] dst_addr = new byte[6];  //도착지 mac주소
+        m_sHeader.enet_type[0] = (byte) 0x08;
+        m_sHeader.enet_type[1] = (byte) 0x06;   //상위 프로토콜 설정(ARP)
 
-        m_sHeader.enet_type[0] = (byte) 0x06;
-        m_sHeader.enet_type[1] = (byte) 0x08;   //상위 프로토콜 설정(ARP)
+        dst_addr = selectDstAddress(input);     //input에서 도착지 mac주소만 골라냄
+        setEnetDstAddress(dst_addr);            //Header에 도착지 mac주소 설정
 
-        dst_addr = selectDstAddress(input);    //input에서 도착지 mac주소만 골라냄
-
-        System.arraycopy(m_sHeader.enet_srcaddr.addr, 0, ex_ethernet_addr, 0, 6);   //필요성?
-//        src_addr = m_sHeader.enet_srcaddr.addr;
-
-        System.arraycopy(input, 8, src_addr, 0, 6);
-//        setEnetSrcAddress(src_addr);    //Header에 출발지 mac주소 설정
-        setEnetDstAddress(dst_addr);    //Header에 도착지 mac주소 설정
+        System.arraycopy(m_sHeader.enet_srcaddr.addr, 0, ex_ethernet_addr, 0, 6);
 
 //        System.out.println("src mac addr from ETH");
 //        System.out.println(macByteArrToString(src_addr));
@@ -157,14 +150,12 @@ public class EthernetLayer implements BaseLayer {
      */
     public byte[] selectDstAddress(byte[] input) {
         byte[] dst_addr = new byte[6];                      //도착지 mac주소
-        if (input[6] == 0x00 && input[7] == 0x01) {         //ARP요청의 경우
+        if (input[6] == 0x00 && input[7] == 0x01) {         //ARP요청의 경우 Broadcast
+            System.out.println("Ethernet Send: ARP Request");
             Arrays.fill(dst_addr, (byte) 0xff);
         } else if (input[6] == 0x00 && input[7] == 0x02) {  //ARP응답의 경우
-            if (input[18] == 0x00 && input[19] == 0x00 && input[20] == 0x00 && input[21] == 0x00 && input[22] == 0x00 && input[23] == 0x00) { //GARP?
-                Arrays.fill(dst_addr, (byte) 0xff);
-            } else {
-                System.arraycopy(input, 18, dst_addr, 0, 6);
-            }
+            System.out.println("Ethernet Send: ARP Reply");
+            System.arraycopy(input, 18, dst_addr, 0, 6);
         }
         return dst_addr;
     }
