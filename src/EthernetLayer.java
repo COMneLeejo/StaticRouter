@@ -199,32 +199,22 @@ public class EthernetLayer implements BaseLayer {
      */
     public boolean receive(byte[] input) {
         byte[] data;
-        //자신이 만든 프레임은 폐기
 
 //        System.out.println("recieved dest mac addr");
 //        System.out.println(macByteArrToString(Arrays.copyOfRange(input, 0, 6)));
 //        System.out.println("recieved src mac addr");
 //        System.out.println(macByteArrToString(Arrays.copyOfRange(input, 6, 12)));
 
-        if (input[12] == (byte)0x08 && input[13] == (byte)0x06) {
-            if (!isSrcMyAddress(input)) {
-                if (isBrodcastAddress(input) || isDstMyAddress(input) ) {    //도착지 mac주소가 broAddr이거나 자신의 주소이면
-                    if (ex_ethernet_addr != null) {       
-                        if (isExEthernetAddress(input)) {
-                            return false;
-                        }
-                    }
-                    System.out.println("passed dest mac addr");
-                    System.out.println(macByteArrToString(Arrays.copyOfRange(input, 0, 6)));
-                    System.out.println("passed src mac addr");
-                    System.out.println(macByteArrToString(Arrays.copyOfRange(input, 6, 12)));
-                    data = removeCappHeader(input, input.length);
-                    this.getUpperLayer(0).receive(data);             //ARP Layer로 보냄
-                    return true;
+        if (!isSrcMyAddress(input)) {       //자신이 만든 프레임은 폐기
+            if (isBrodcastAddress(input) || isDstMyAddress(input) ) {       //도착지 mac주소가 broAddr이거나 자신의 주소이면
+                data = removeCappHeader(input, input.length)
+                if (input[12] == (byte)0x08 && input[13] == (byte)0x06){    //ARP
+                    ((ARPLayer)this.getUpperLayer(0)).receive(data);
+                }else {                      //IP, 이때 ARP를 거쳐서 왔기 때문에 header가 제대로 안지워질지도
+                    ((IPLayer)this.getUpperLayer(1)).receive(data);
                 }
+                return true;
             }
-        } else{
-            this.getUpperLayer(0).receive(null);
         }
         return false;
     }
