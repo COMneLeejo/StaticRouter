@@ -191,7 +191,7 @@ public class ARPLayer implements BaseLayer {
         if (input == null) {
             return false;
         }
-        Object[] value = new Object[5]; // TODO : 4 -> 5로 바꾸자
+        Object[] value = new Object[5];
         byte[] opcode = new byte[2];
         System.arraycopy(input, 6, opcode, 0, 2);
 
@@ -204,7 +204,7 @@ public class ARPLayer implements BaseLayer {
         String target_ip = arp_request_array[3];
 
 
-        if (opcode[0] == 0x00 && opcode[1] == 0x01) {
+        /*if (opcode[0] == 0x00 && opcode[1] == 0x01) {
             this.target_mac_addr = host_mac_addr;
 
             //opcode 2로 변경(reply)
@@ -214,7 +214,6 @@ public class ARPLayer implements BaseLayer {
 
             // 케시 테이블 업데이트
             if (!cache_table.containsKey(ipByteArrToString(this.sender_ip_addr))) {
-                // TODO : port 정보 넣어주자
                 value[0] = cache_table.size();
                 value[1] = this.sender_mac_addr;
                 value[2] = "Complete";
@@ -225,12 +224,11 @@ public class ARPLayer implements BaseLayer {
             updateCacheTable();
 
             //target과 sender를 swapping하여 send
-            this.send(this.target_mac_addr, this.target_ip_addr, this.sender_mac_addr, this.sender_ip_addr, newOpcode);
-        }
+            this.send(this.target_mac_addr, this.target_ip_addr, this.sender_mac_addr, this.sender_ip_addr, newOpcode, portName);
+        }*/
 
         if (opcode[0] == 0x00 && opcode[1] == 0x02) {
             if (!cache_table.containsKey(sender_ip)) {
-                // TODO : port 정보 넣어주자
                 //cache_table에 존재하지 않을 경우
                 value[0] = cache_table.size();
                 value[1] = this.sender_mac_addr;
@@ -238,7 +236,6 @@ public class ARPLayer implements BaseLayer {
                 value[3] = System.currentTimeMillis();
                 value[4] = portName;
             } else {
-                // TODO : port 정보 넣어주자
                 //cache_table에 존재하는 경우
                 value[0] = cache_table.get(sender_ip)[0];
                 value[1] = this.sender_mac_addr;
