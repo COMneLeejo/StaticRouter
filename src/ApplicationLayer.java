@@ -105,10 +105,12 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
         // 친구 ip설정해주는 부분(우린 라우팅테이블 써야함)
         // ((IPLayer) m_LayerMgr.getLayer("IP")).friendIpset(((IPLayer) m_LayerMgr.getLayer("IP2")));
         // ((IPLayer) m_LayerMgr.getLayer("IP2")).friendIpset(((IPLayer) m_LayerMgr.getLayer("IP")));
-       ((IPLayer) m_layer_mgr.getLayer("IP")).setRouter(routing_table);
-       ((IPLayer) m_layer_mgr.getLayer("IP2")).setRouter(routing_table);
-       ((IPLayer) m_layer_mgr.getLayer("IP")).setAnotherIPLayer((NILayer) m_layer_mgr.getLayer("IP2"));
-       ((IPLayer) m_layer_mgr.getLayer("IP2")).setAnotherIPLayer((NILayer) m_layer_mgr.getLayer("IP"));
+      ((IPLayer) m_layer_mgr.getLayer("IP")).setRouter(routing_table);
+      ((IPLayer) m_layer_mgr.getLayer("IP2")).setRouter(routing_table);
+      ((IPLayer) m_layer_mgr.getLayer("IP")).setAnotherIPLayer((NILayer) m_layer_mgr.getLayer("IP2"));
+      ((IPLayer) m_layer_mgr.getLayer("IP2")).setAnotherIPLayer((NILayer) m_layer_mgr.getLayer("IP"));
+      ((IPLayer) m_layer_mgr.getLayer("IP")).setPort("Port1");
+      ((IPLayer) m_layer_mgr.getLayer("IP2")).setPort("Port2");
     }
 
     public ApplicationLayer(String pName) {
