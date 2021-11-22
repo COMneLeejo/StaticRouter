@@ -187,13 +187,12 @@ public class ARPLayer implements BaseLayer {
 
     @Override
     public boolean receive(byte[] input) {
-
         // TODO : cacheTable에서 정보 update 시 port 정보 추가
 
         if(input == null){
             return false;
         }
-        Object[] value = new Object[4]; // TODO : 4 -> 5로 바꾸자
+        Object[] value = new Object[5]; // TODO : 4 -> 5로 바꾸자
         byte[] opcode = new byte[2];
         System.arraycopy(input, 6, opcode, 0, 2);
 
@@ -222,6 +221,7 @@ public class ARPLayer implements BaseLayer {
                 value[1] = this.sender_mac_addr;
                 value[2] = "Complete";
                 value[3] = System.currentTimeMillis();
+                value[4] = portName;
             }
             cache_table.put(ipByteArrToString(this.sender_ip_addr), value);
             updateCacheTable();
@@ -238,6 +238,7 @@ public class ARPLayer implements BaseLayer {
                 value[1] = this.sender_mac_addr;
                 value[2] = "Complete";
                 value[3] = System.currentTimeMillis();
+                value[4] = portName;
             } else {
                 // TODO : port 정보 넣어주자
                 //cache_table에 존재하는 경우
@@ -245,6 +246,7 @@ public class ARPLayer implements BaseLayer {
                 value[1] = this.sender_mac_addr;
                 value[2] = "Complete";
                 value[3] = System.currentTimeMillis();
+                value[4] = portName;
             }
             cache_table.put(sender_ip, value);
             updateCacheTable();
@@ -367,7 +369,7 @@ public class ARPLayer implements BaseLayer {
      *
      * @param ip_byte_arr byte 배열형의 ip 주소
      * @return String 형태의 ip 주소
-     */]
+     */
     public String ipByteArrToString(byte[] ip_byte_arr) {
         return (ip_byte_arr[0] & 0xFF) + "." + (ip_byte_arr[1] & 0xFF) + "."
                 + (ip_byte_arr[2] & 0xFF) + "." + (ip_byte_arr[3] & 0xFF);
