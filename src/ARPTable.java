@@ -52,6 +52,15 @@ public class ARPTable {
     }
 
     /**
+     * 케시 테이블에서 key가 존재하는지 확인
+     * @param ip_string
+     * @return
+     */
+    public boolean containsKey(String ip_string){
+        return this.cache_table.containsKey(ip_string);
+    }
+
+    /**
      *  케시테이블 업데이트
      *  TODO    :  application layer 에서 연동 필요
      */
@@ -131,7 +140,7 @@ public class ARPTable {
                 for (String del_key : delete_key) {
                     this.cache_table.remove(del_key);
                 }
-                
+
                 updateCacheTable();
 
                 try {
