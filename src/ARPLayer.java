@@ -317,35 +317,35 @@ public class ARPLayer implements BaseLayer {
         return header;
     }
 
-    /**
-     * 케시 테이블 업데이트
-     */
-    public void updateCacheTable() {
-        // TODO: PORT 정보 넣어주자
-
-        ApplicationLayer.arp_textarea.setText("");
-
-        Set keys = cache_table.keySet();
-        for (Iterator iterator = keys.iterator(); iterator.hasNext(); ) {
-            String key = (String) iterator.next();
-            Object[] value = (Object[]) cache_table.get(key);
-
-            if (value[2] == null) {
-                // TODO: Trash 값 없애기
-//                ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t trash\n");
-            } else if (value[2].equals("Incomplete")) {
-                // TODO: Port Name 정보 입력 필요
-                ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t incomplete \t " + // value[5] (포트 이름) + ""
-                        "portName\n");
-            } else {
-                byte[] mac_addr_byte = (byte[]) value[1];
-                String mac_address_string = macByteArrToString(mac_addr_byte);
-                // TODO: Port Name 관련 정보 입력
-                ApplicationLayer.arp_textarea.append("       " + key + "\t" + mac_address_string + "\t complete\t" + // value[5] (포트 이름) + ""
-                        " portName\n");
-            }
-        }
-    }
+//    /**
+//     * 케시 테이블 업데이트
+//     */
+//    public void updateCacheTable() {
+//        // TODO: PORT 정보 넣어주자
+//
+//        ApplicationLayer.arp_textarea.setText("");
+//
+//        Set keys = cache_table.keySet();
+//        for (Iterator iterator = keys.iterator(); iterator.hasNext(); ) {
+//            String key = (String) iterator.next();
+//            Object[] value = (Object[]) cache_table.get(key);
+//
+//            if (value[2] == null) {
+//                // TODO: Trash 값 없애기
+////                ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t trash\n");
+//            } else if (value[2].equals("Incomplete")) {
+//                // TODO: Port Name 정보 입력 필요
+//                ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t incomplete \t " + // value[5] (포트 이름) + ""
+//                        "portName\n");
+//            } else {
+//                byte[] mac_addr_byte = (byte[]) value[1];
+//                String mac_address_string = macByteArrToString(mac_addr_byte);
+//                // TODO: Port Name 관련 정보 입력
+//                ApplicationLayer.arp_textarea.append("       " + key + "\t" + mac_address_string + "\t complete\t" + // value[5] (포트 이름) + ""
+//                        " portName\n");
+//            }
+//        }
+//    }
 
     /**
      * byte 형태 mac 주소 문자열로 반환
@@ -374,53 +374,53 @@ public class ARPLayer implements BaseLayer {
     /**
      * 케시 테이블 목록의 시간 확인 위한 스레드 상속 받은 클래스
      */
-    class CacheTimer implements Runnable {
-        HashMap<String, Object[]> cache_table;
-        final int INCOMPLETE_TIME_LIMIT = 3;
-        final int COMPLETE_TIME_LIMIT = 20;
-
-        public CacheTimer(HashMap<String, Object[]> _cache_table) {
-            this.cache_table = _cache_table;
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                Set key_set = this.cache_table.keySet();
-                ArrayList<String> delete_key = new ArrayList<>();
-
-                for (Iterator iterator = key_set.iterator(); iterator.hasNext(); ) {
-                    String key = "";
-                    if ((key = (String) iterator.next()) != null) {    // key 값 받아옴
-                        Object[] value = this.cache_table.get(key);
-
-                        if (((String) value[2]).equals("Incomplete") &&
-                                (System.currentTimeMillis() - (long) value[3]) / 60000 >= INCOMPLETE_TIME_LIMIT) {
-                            delete_key.add(key);
-                        }
-
-                        if (((String) value[2]).equals("Complete") &&
-                                (System.currentTimeMillis() - (long) value[3]) / 60000 >= COMPLETE_TIME_LIMIT) {
-                            delete_key.add(key);
-                        }
-                    }
-                }
-
-                for (String del_key : delete_key) {
-                    this.cache_table.remove(del_key);
-                }
-
-                // TODO : 케시 테이블 업데이트 메소드 구현
-                updateCacheTable();
-
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+//    class CacheTimer implements Runnable {
+//        HashMap<String, Object[]> cache_table;
+//        final int INCOMPLETE_TIME_LIMIT = 3;
+//        final int COMPLETE_TIME_LIMIT = 20;
+//
+//        public CacheTimer(HashMap<String, Object[]> _cache_table) {
+//            this.cache_table = _cache_table;
+//        }
+//
+//        @Override
+//        public void run() {
+//            while (true) {
+//                Set key_set = this.cache_table.keySet();
+//                ArrayList<String> delete_key = new ArrayList<>();
+//
+//                for (Iterator iterator = key_set.iterator(); iterator.hasNext(); ) {
+//                    String key = "";
+//                    if ((key = (String) iterator.next()) != null) {    // key 값 받아옴
+//                        Object[] value = this.cache_table.get(key);
+//
+//                        if (((String) value[2]).equals("Incomplete") &&
+//                                (System.currentTimeMillis() - (long) value[3]) / 60000 >= INCOMPLETE_TIME_LIMIT) {
+//                            delete_key.add(key);
+//                        }
+//
+//                        if (((String) value[2]).equals("Complete") &&
+//                                (System.currentTimeMillis() - (long) value[3]) / 60000 >= COMPLETE_TIME_LIMIT) {
+//                            delete_key.add(key);
+//                        }
+//                    }
+//                }
+//
+//                for (String del_key : delete_key) {
+//                    this.cache_table.remove(del_key);
+//                }
+//
+//                // TODO : 케시 테이블 업데이트 메소드 구현
+//                updateCacheTable();
+//
+//                try {
+//                    Thread.sleep(100);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
 
     @Override
     public String getLayerName() {
