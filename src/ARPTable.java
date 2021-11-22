@@ -50,6 +50,15 @@ public class ARPTable {
             return null;
         }
     }
+    
+    /**
+     * 케시 테이블의 크기 반환
+     * @param 
+     * @return : cache_table의 크기 반환
+     */
+    public int size(){
+        return this.cache_table.size();
+    }
 
     /**
      * 케시 테이블에서 key가 존재하는지 확인
