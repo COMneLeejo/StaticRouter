@@ -9,24 +9,24 @@ public class ARPTable {
     public ARPTable() {
         this.cache_table = new HashMap<>();
 
-        // ARP Å×ÀÌºí »ı¼º ÈÄ Å¸ÀÌ¸Ó ¾²·¹µå ½ÇÇà
+        // ARP í…Œì´ë¸” ìƒì„± í›„ íƒ€ì´ë¨¸ ì“°ë ˆë“œ ì‹¤í–‰
         Thread thread = new Thread(new CacheTimer(this.cache_table));
         thread.start();
     }
 
     /**
-     * ÄÉ½Ã Å×ÀÌºí¿¡ <key, value> °ª ³ÖÀ½
+     * ì¼€ì‹œ í…Œì´ë¸”ì— <key, value> ê°’ ë„£ìŒ
      *
-     * @param addr  : ip ÁÖ¼Ò
-     * @param value : value[], value °¡ µÉ °ª
-     * @return      : Á¤»ó ÀÛµ¿ ¿©ºÎ ¹İÈ¯
+     * @param addr  : ip ì£¼ì†Œ
+     * @param value : value[], value ê°€ ë  ê°’
+     * @return      : ì •ìƒ ì‘ë™ ì—¬ë¶€ ë°˜í™˜
      */
     public boolean put(String addr, Object[] value) {
-        // value[0] : ÄÉ½Ã Å×ÀÌºíÀÇ »çÀÌÁî (? ¿Ö ÇÊ¿äÇÑ°¡ ¾ÆÁ÷ ÀÌÇØ ¸øÇÔ)
-        // value[1] : »ó´ë¹æ mac ÁÖ¼Ò
-        // value[2] : »óÅÂ , incomplete ? complete
-        // value[3] : ÇöÀç ½Ã°£
-        // value[4] : Æ÷Æ® ÀÌ¸§ (* »õ·Î Ãß°¡ µÈ Á¤º¸ *)
+        // value[0] : ì¼€ì‹œ í…Œì´ë¸”ì˜ ì‚¬ì´ì¦ˆ (? ì™œ í•„ìš”í•œê°€ ì•„ì§ ì´í•´ ëª»í•¨)
+        // value[1] : ìƒëŒ€ë°© mac ì£¼ì†Œ
+        // value[2] : ìƒíƒœ , incomplete ? complete
+        // value[3] : í˜„ì¬ ì‹œê°„
+        // value[4] : í¬íŠ¸ ì´ë¦„ (* ìƒˆë¡œ ì¶”ê°€ ëœ ì •ë³´ *)
 
         if (addr.equals("")){
             System.out.println("Input address is null");
@@ -38,9 +38,9 @@ public class ARPTable {
     }
 
     /**
-     * ÄÉ½Ã Å×ÀÌºí¿¡¼­ key¿¡ ¸Â´Â value °ª ¹İÈ¯
-     * @param key   : ip ÁÖ¼Ò
-     * @return      : Å°°¡ Á¸ÀçÇÏ´Â °æ¿ì key ¿¡ ¸Â´Â value ¹İÈ¯
+     * ì¼€ì‹œ í…Œì´ë¸”ì—ì„œ keyì— ë§ëŠ” value ê°’ ë°˜í™˜
+     * @param key   : ip ì£¼ì†Œ
+     * @return      : í‚¤ê°€ ì¡´ì¬í•˜ëŠ” ê²½ìš° key ì— ë§ëŠ” value ë°˜í™˜
      */
     public Object get(String key){
         if (this.cache_table.containsKey(key)) {
@@ -50,13 +50,31 @@ public class ARPTable {
             return null;
         }
     }
+    
+    /**
+     * ì¼€ì‹œ í…Œì´ë¸”ì˜ í¬ê¸° ë°˜í™˜
+     * @param 
+     * @return : cache_tableì˜ í¬ê¸° ë°˜í™˜
+     */
+    public int size(){
+        return this.cache_table.size();
+    }
 
     /**
-     *  ÄÉ½ÃÅ×ÀÌºí ¾÷µ¥ÀÌÆ®
-     *  TODO    :  application layer ¿¡¼­ ¿¬µ¿ ÇÊ¿ä
+     * ì¼€ì‹œ í…Œì´ë¸”ì—ì„œ keyê°€ ì¡´ì¬í•˜ëŠ”ì§€ í™•ì¸
+     * @param ip_string
+     * @return
+     */
+    public boolean containsKey(String ip_string){
+        return this.cache_table.containsKey(ip_string);
+    }
+
+    /**
+     *  ì¼€ì‹œí…Œì´ë¸” ì—…ë°ì´íŠ¸
+     *  TODO    :  application layer ì—ì„œ ì—°ë™ í•„ìš”
      */
     public void updateCacheTable() {
-        // TODO : Application Layer ¿¡¼­ ¿¬µ¿ ÇÊ¿ä (textArea °ü·Ã)
+        // TODO : Application Layer ì—ì„œ ì—°ë™ í•„ìš” (textArea ê´€ë ¨)
 
         Set keys = cache_table.keySet();
 
@@ -65,30 +83,30 @@ public class ARPTable {
             Object[] value = (Object[]) cache_table.get(key);
 
             if (value[2] == null) {
-                // TODO : Trash °ª ¾ø¾Ö±â
-                //      : Application Layer ¿¡¼­ ¿¬µ¿ ÇÊ¿ä
-//                ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t trash\n");
+                // TODO : Trash ê°’ ì—†ì• ê¸°
+                //      : Application Layer ì—ì„œ ì—°ë™ í•„ìš”
+                // ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t trash\n");
             } else if (value[2].equals("Incomplete")) {
-                // TODO : Port Name Á¤º¸ ÀÔ·Â ÇÊ¿ä
-                //      : Application Layer ¿¡¼­ ¿¬µ¿ ÇÊ¿ä, port Name ¿¡ ´ëÇØ Ã³¸® ÇÊ¿ä
-//                ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t incomplete \t " + // value[5] (Æ÷Æ® ÀÌ¸§)
+                // TODO : Port Name ì •ë³´ ì…ë ¥ í•„ìš”
+                //      : Application Layer ì—ì„œ ì—°ë™ í•„ìš”, port Name ì— ëŒ€í•´ ì²˜ë¦¬ í•„ìš”
+                // ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t incomplete \t " + // value[5] (í¬íŠ¸ ì´ë¦„)
                 // + "");
             } else {
                 byte[] mac_addr_byte = (byte[]) value[1];
                 String mac_address_string = macByteArrToString(mac_addr_byte);
-                // TODO : Port Name °ü·Ã Á¤º¸ ÀÔ·Â
-                //      : Application Layer ¿¡¼­ ¿¬µ¿ ÇÊ¿ä, port Name ¿¡ ´ëÇØ Ã³¸® ÇÊ¿ä
-//                ApplicationLayer.arp_textarea.append("       " + key + "\t" + mac_address_string + "\t complete\t" + // value[5] (Æ÷Æ® ÀÌ¸§)
+                // TODO : Port Name ê´€ë ¨ ì •ë³´ ì…ë ¥
+                //      : Application Layer ì—ì„œ ì—°ë™ í•„ìš”, port Name ì— ëŒ€í•´ ì²˜ë¦¬ í•„ìš”
+                //ApplicationLayer.arp_textarea.append("       " + key + "\t" + mac_address_string + "\t complete\t" + // value[5] (í¬íŠ¸ ì´ë¦„)
                 // + "");
             }
         }
     }
 
     /**
-     * byte ÇüÅÂ mac ÁÖ¼Ò ¹®ÀÚ¿­·Î ¹İÈ¯
+     * byte í˜•íƒœ mac ì£¼ì†Œ ë¬¸ìì—´ë¡œ ë°˜í™˜
      *
-     * @param mac_byte_arr byte ¹è¿­ÇüÀÇ mac ÁÖ¼Ò
-     * @return String ÇüÅÂÀÇ mac wnth
+     * @param mac_byte_arr byte ë°°ì—´í˜•ì˜ mac ì£¼ì†Œ
+     * @return String í˜•íƒœì˜ mac wnth
      */
     public String macByteArrToString(byte[] mac_byte_arr) {
         return String.format("%X:", mac_byte_arr[0]) + String.format("%X:", mac_byte_arr[1])
@@ -113,7 +131,7 @@ public class ARPTable {
 
                 for (Iterator iterator = key_set.iterator(); iterator.hasNext(); ) {
                     String key = "";
-                    if ((key = (String) iterator.next()) != null) {    // key °ª ¹Ş¾Æ¿È
+                    if ((key = (String) iterator.next()) != null) {    // key ê°’ ë°›ì•„ì˜´
                         Object[] value = this.cache_table.get(key);
 
                         if (((String) value[2]).equals("Incomplete") &&
@@ -131,7 +149,7 @@ public class ARPTable {
                 for (String del_key : delete_key) {
                     this.cache_table.remove(del_key);
                 }
-                
+
                 updateCacheTable();
 
                 try {
@@ -143,3 +161,5 @@ public class ARPTable {
         }
     }
 }
+
+
