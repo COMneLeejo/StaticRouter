@@ -82,32 +82,33 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
     FileDialog fd;
 
     public static void main(String[] args) throws IOException {
-    	m_layer_mgr.addLayer(new NILayer("NI"));
-    	m_layer_mgr.addLayer(new EthernetLayer("Ethernet"));
         arp_table = new ARPTable();
-        m_layer_mgr.addLayer(new ARPLayer("ARP2", arp_table));
-        m_layer_mgr.addLayer(new ARPLayer("ARP", arp_table));
-       
-        m_layer_mgr.addLayer(new IPLayer("IP"));
+        routing_table = new RoutingTable();
 
+    	m_layer_mgr.addLayer(new NILayer("NI"));
         m_layer_mgr.addLayer(new NILayer("NI2"));
+    	m_layer_mgr.addLayer(new EthernetLayer("Ethernet"));
         m_layer_mgr.addLayer(new EthernetLayer("Ethernet2"));
-        
-        m_layer_mgr.addLayer(new IPLayer("IP2"));
+        m_layer_mgr.addLayer(new ARPLayer("ARP2"));
+        m_layer_mgr.addLayer(new ARPLayer("ARP"));
+        m_layer_mgr.addLayer(new IPLayer("IP"));
+        m_layer_mgr.addLayer(new IPLayer("IP2"));        
         m_layer_mgr.addLayer(new ApplicationLayer("GUI"));
 
 //        arp_table = new ARPTable((ARPLayer) m_layer_mgr.getLayer("ARP"), (ARPLayer) m_layer_mgr.getLayer("ARP2"),(ApplicationLayer) m_layer_mgr.getLayer("GUI") );
 //        ((ARPLayer)m_layer_mgr.getLayer("ARP")).setArpTable(arp_table,(ApplicationLayer) m_layer_mgr.getLayer("GUI"));
 //        ((ARPLayer)m_layer_mgr.getLayer("ARP2")).setArpTable(arp_table,(ApplicationLayer) m_layer_mgr.getLayer("GUI"));
 
-        m_layer_mgr.connectLayers(" NI ( +Ethernet ( +ARP ( +IP ( +GUI ) ) +IP ( +GUI ) ) ) ^GUI ( -IP ( -ARP ( -Ethernet ( -NI ) ) -Ethernet ( -NI ) ) )  ^NI2 ( +Ethernet2 ( +ARP2 ( +IP2 ( +GUI ) ) +IP2 ( +GUI ) ) ) ^GUI ( -IP2 ( -ARP2 ( -Ethernet2 ( -NI2 ) ) -Ethernet2 ( -NI2 ) ) )");
+        m_layer_mgr.connectLayers("NI ( +Ethernet ( +ARP ( +IP ( +GUI ) ) +IP ( +GUI ) ) ) ^GUI ( -IP ( -ARP ( -Ethernet ( -NI ) ) -Ethernet ( -NI ) ) )  ^NI2 ( +Ethernet2 ( +ARP2 ( +IP2 ( +GUI ) ) +IP2 ( +GUI ) ) ) ^GUI ( -IP2 ( -ARP2 ( -Ethernet2 ( -NI2 ) ) -Ethernet2 ( -NI2 ) ) )");
+        // m_layer_mgr.connectLayers("NI ( +Ethernet ( +ARP +IP ( + GUI ) ) ) ^GUI ( -IP ( -ARP ( -Ethernet ( -NI ) ) ) ) ^NI2 ( +Ethernet2 ( +ARP2 +IP2 ( + GUI ) ) ) ^GUI ( -IP2 ( -ARP2 ( -Ethernet2 ( -NI2 ) ) ) )");
 
-        routing_table = new RoutingTable();
         // 친구 ip설정해주는 부분(우린 라우팅테이블 써야함)
         // ((IPLayer) m_LayerMgr.getLayer("IP")).friendIpset(((IPLayer) m_LayerMgr.getLayer("IP2")));
         // ((IPLayer) m_LayerMgr.getLayer("IP2")).friendIpset(((IPLayer) m_LayerMgr.getLayer("IP")));
         ((IPLayer) m_layer_mgr.getLayer("IP")).setRouter(routing_table);
         ((IPLayer) m_layer_mgr.getLayer("IP2")).setRouter(routing_table);
+        ((IPLayer) m_layer_mgr.getLayer("IP")).setLayerManager(m_layer_mgr);
+        ((IPLayer) m_layer_mgr.getLayer("IP2")).setLayerManager(m_layer_mgr);
     }
 
     public ApplicationLayer(String pName) {
