@@ -49,8 +49,8 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
 
     static JTextArea arp_textarea;
     static JTextArea ip_src_address;
-    static JTextArea ethernet_src_address1;
-    static JTextArea ethernet_src_address2;
+    static JTextArea ethernet_src_address1 = new JTextArea();
+    static JTextArea ethernet_src_address2 = new JTextArea();
     JTextArea destination_textarea;
     JTextArea netmask_textarea;
     JTextArea gateway_textarea;
@@ -68,7 +68,7 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
     JLabel netmask_title;
     JLabel flag_title;
     JLabel interface_title;
-    
+
     JCheckBox flag_up;
     JCheckBox flag_gateway;
     JCheckBox flag_host;
@@ -79,20 +79,23 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
     JComboBox<String> select_host;
     JComboBox<String> select_combo;
 
+    int index1;
+    int index2;
+
     FileDialog fd;
 
     public static void main(String[] args) throws IOException {
         arp_table = new ARPTable();
         routing_table = new RoutingTable();
 
-    	m_layer_mgr.addLayer(new NILayer("NI"));
+        m_layer_mgr.addLayer(new NILayer("NI"));
         m_layer_mgr.addLayer(new NILayer("NI2"));
-    	m_layer_mgr.addLayer(new EthernetLayer("Ethernet"));
+        m_layer_mgr.addLayer(new EthernetLayer("Ethernet"));
         m_layer_mgr.addLayer(new EthernetLayer("Ethernet2"));
         m_layer_mgr.addLayer(new ARPLayer("ARP2"));
         m_layer_mgr.addLayer(new ARPLayer("ARP"));
         m_layer_mgr.addLayer(new IPLayer("IP"));
-        m_layer_mgr.addLayer(new IPLayer("IP2"));        
+        m_layer_mgr.addLayer(new IPLayer("IP2"));
         m_layer_mgr.addLayer(new ApplicationLayer("GUI"));
 
 //        arp_table = new ARPTable((ARPLayer) m_layer_mgr.getLayer("ARP"), (ARPLayer) m_layer_mgr.getLayer("ARP2"),(ApplicationLayer) m_layer_mgr.getLayer("GUI") );
@@ -103,14 +106,12 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
         // m_layer_mgr.connectLayers("NI ( +Ethernet ( +ARP +IP ( + GUI ) ) ) ^GUI ( -IP ( -ARP ( -Ethernet ( -NI ) ) ) ) ^NI2 ( +Ethernet2 ( +ARP2 +IP2 ( + GUI ) ) ) ^GUI ( -IP2 ( -ARP2 ( -Ethernet2 ( -NI2 ) ) ) )");
 
         // 친구 ip설정해주는 부분(우린 라우팅테이블 써야함)
-        // ((IPLayer) m_LayerMgr.getLayer("IP")).friendIpset(((IPLayer) m_LayerMgr.getLayer("IP2")));
-        // ((IPLayer) m_LayerMgr.getLayer("IP2")).friendIpset(((IPLayer) m_LayerMgr.getLayer("IP")));
-      ((IPLayer) m_layer_mgr.getLayer("IP")).setRouter(routing_table);
-      ((IPLayer) m_layer_mgr.getLayer("IP2")).setRouter(routing_table);
-      ((IPLayer) m_layer_mgr.getLayer("IP")).setAnotherIPLayer((NILayer) m_layer_mgr.getLayer("IP2"));
-      ((IPLayer) m_layer_mgr.getLayer("IP2")).setAnotherIPLayer((NILayer) m_layer_mgr.getLayer("IP"));
-      ((IPLayer) m_layer_mgr.getLayer("IP")).setPort("Port1");
-      ((IPLayer) m_layer_mgr.getLayer("IP2")).setPort("Port2");
+        // ((IPLayer) m_layer_mgr.getLayer("IP")).friendIpset(((IPLayer) m_layer_mgr.getLayer("IP2")));
+        // ((IPLayer) m_layer_mgr.getLayer("IP2")).friendIpset(((IPLayer) m_layer_mgr.getLayer("IP")));
+        ((IPLayer) m_layer_mgr.getLayer("IP")).setRouter(routing_table);
+        ((IPLayer) m_layer_mgr.getLayer("IP2")).setRouter(routing_table);
+        ((IPLayer) m_layer_mgr.getLayer("IP")).setAnotherIPLayer((IPLayer) m_layer_mgr.getLayer("IP2"));
+        ((IPLayer) m_layer_mgr.getLayer("IP2")).setAnotherIPLayer((IPLayer) m_layer_mgr.getLayer("IP"));
     }
 
     public ApplicationLayer(String pName) {
@@ -203,7 +204,7 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
         gateway_textarea.setBounds(200, 275, 180, 20);
         gateway_textarea.setEnabled(true);
         routing_panel.add(gateway_textarea);
-        
+
         // flag
         flag_title = new JLabel("Flag");
         flag_title.setBounds(110, 300, 90, 30);
@@ -220,7 +221,7 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
         flag_host = new JCheckBox("Host");
         flag_host.setBounds(350, 300, 60, 30);
         routing_panel.add(flag_host);
-        
+
         // interface
         interface_title = new JLabel("Interface");
         interface_title.setBounds(110, 330, 90, 30);
@@ -229,9 +230,9 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
         select_combo = new JComboBox<String>(interface_name);
         select_combo.setBounds(200, 335, 170, 20);
         select_combo.addActionListener(new ActionListener() {
-           public void actionPerformed(ActionEvent e) {
-              interface0 = interface_name[select_combo.getSelectedIndex()];
-           }
+            public void actionPerformed(ActionEvent e) {
+                interface0 = interface_name[select_combo.getSelectedIndex()];
+            }
         });
         routing_panel.add(select_combo);
 
@@ -241,33 +242,33 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
         routing_panel.add(btnAdd);
         btnAdd.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-            	StringTokenizer st = new StringTokenizer(destination_textarea.getText(), ".");
+                StringTokenizer st = new StringTokenizer(destination_textarea.getText(), ".");
 
                 byte[] destination = new byte[4];
                 for (int i = 0; i < 4; i++) {
-                   String ss = st.nextToken();
-                   int s = Integer.parseInt(ss);
-                   destination[i] = (byte) (s & 0xFF);
+                    String ss = st.nextToken();
+                    int s = Integer.parseInt(ss);
+                    destination[i] = (byte) (s & 0xFF);
                 }
 
                 st = new StringTokenizer(netmask_textarea.getText(), ".");
 
                 byte[] netmask = new byte[4];
                 for (int i = 0; i < 4; i++) {
-                   String ss = st.nextToken();
-                   int s = Integer.parseInt(ss);
-                   netmask[i] = (byte) (s & 0xFF);
+                    String ss = st.nextToken();
+                    int s = Integer.parseInt(ss);
+                    netmask[i] = (byte) (s & 0xFF);
                 }
 
                 st = new StringTokenizer(gateway_textarea.getText(), ".");
 
                 byte[] gateway = new byte[4];
                 for (int i = 0; i < 4; i++) {
-                   String ss = st.nextToken();
-                   int s = Integer.parseInt(ss);
-                   gateway[i] = (byte) (s & 0xFF);
+                    String ss = st.nextToken();
+                    int s = Integer.parseInt(ss);
+                    gateway[i] = (byte) (s & 0xFF);
                 }
-                
+
                 String interface_num = interface0;
                 Object[] value = new Object[7];
                 value[0] = destination;
@@ -277,8 +278,8 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
                 value[4] = flag_gateway.isSelected();
                 value[5] = flag_host.isSelected();
                 value[6] = interface_num;
-                
-                routing_table.add(destination_textarea.getText(), value);               
+
+                routing_table.add(destination_textarea.getText(), value);
                 routing_area.setText(routing_table.updateRoutingTable());
             }
         });
@@ -291,27 +292,27 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
             public void actionPerformed(ActionEvent arg0) {
                 String delete_ip = JOptionPane.showInputDialog("Item's IP Address");
                 if (delete_ip != null) {
-				StringTokenizer st = new StringTokenizer(delete_ip,".");
-				byte[] ip_address = new byte[4];
-				for (int i = 0; i < 4; i++) {
-					String ss = st.nextToken();
-					int s = Integer.parseInt(ss);
-					ip_address[i] = (byte) (s & 0xFF);
-				}
-				
-				String netmask = JOptionPane.showInputDialog("Item's netMask Address");
-				st = new StringTokenizer(netmask, ".");
-				byte[] net_mask_byte = new byte[4];
-				for (int i = 0; i < 4; i++) {
-					String ss = st.nextToken();
-					int s = Integer.parseInt(ss);
-					net_mask_byte[i] = (byte) (s & 0xFF);
-				}
-				Object[] remove_value = new Object[2];
-				remove_value[0]=ip_address;
-				remove_value[1]=net_mask_byte;
-				routing_table.remove(remove_value);
-				routing_area.setText(routing_table.updateRoutingTable());
+                    StringTokenizer st = new StringTokenizer(delete_ip,".");
+                    byte[] ip_address = new byte[4];
+                    for (int i = 0; i < 4; i++) {
+                        String ss = st.nextToken();
+                        int s = Integer.parseInt(ss);
+                        ip_address[i] = (byte) (s & 0xFF);
+                    }
+
+                    String netmask = JOptionPane.showInputDialog("Item's netMask Address");
+                    st = new StringTokenizer(netmask, ".");
+                    byte[] net_mask_byte = new byte[4];
+                    for (int i = 0; i < 4; i++) {
+                        String ss = st.nextToken();
+                        int s = Integer.parseInt(ss);
+                        net_mask_byte[i] = (byte) (s & 0xFF);
+                    }
+                    Object[] remove_value = new Object[2];
+                    remove_value[0]=ip_address;
+                    remove_value[1]=net_mask_byte;
+                    routing_table.remove(remove_value);
+                    routing_area.setText(routing_table.updateRoutingTable());
                 }
             }
         });
@@ -385,28 +386,78 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
         setting_Button = new JButton("setting");// setting
         setting_Button.setBounds(720, 20, 80, 20);
         setting_Button.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		if (setting_Button.getText() == "setting") {
-	        		String[] values_ethernet_src1 = ethernet_src_address1.getText().split("-");
-	        		String[] values_ethernet_src2 = ethernet_src_address1.getText().split("-");
-	                byte[] ethernet_src1 = new byte[6];
-	                byte[] ethernet_src2 = new byte[6];
-	                for (int i = 0; i < 6; i++) {
-	                    ethernet_src1[i] = (byte) Integer.parseInt(values_ethernet_src1[i], 16);
-	                    ethernet_src2[i] = (byte) Integer.parseInt(values_ethernet_src2[i], 16);
-	                }
-	                ((EthernetLayer) m_layer_mgr.getLayer("Ethernet")).setEnetSrcAddress(ethernet_src1);
-	                ((EthernetLayer) m_layer_mgr.getLayer("Ethernet2")).setEnetSrcAddress(ethernet_src2);
-	                ((ARPLayer) m_layer_mgr.getLayer("ARP")).setHostMacAddr(ethernet_src1);
-	                ((ARPLayer) m_layer_mgr.getLayer("ARP2")).setHostMacAddr(ethernet_src2);
-	                nic_combo_box1.setEnabled(false);
-	                nic_combo_box2.setEnabled(false);
-	                setting_Button.setText("reset");
-        		} else {
-        			nic_combo_box1.setEnabled(true);
-	                nic_combo_box2.setEnabled(true);
-        			setting_Button.setText("setting");
-        		}
+            public void actionPerformed(ActionEvent e) {
+                if (setting_Button.getText() == "setting") {
+                    index1 = nic_combo_box1.getSelectedIndex();
+                    index2 = nic_combo_box2.getSelectedIndex();
+
+                    try {
+                        byte[] mac0 = ((NILayer) m_layer_mgr.getLayer("NI")).m_adapter_list.get(index1).getHardwareAddress();
+                        byte[] mac1 = ((NILayer) m_layer_mgr.getLayer("NI2")).m_adapter_list.get(index2).getHardwareAddress();
+
+                        final StringBuilder ethernet_addrbuf1 = new StringBuilder();
+                        for(byte b:mac0) {
+                            if(ethernet_addrbuf1.length()!=0) ethernet_addrbuf1.append(":");
+                            if(b>=0 && b<16) ethernet_addrbuf1.append('0');
+                            ethernet_addrbuf1.append(Integer.toHexString((b<0)? b+256:b).toUpperCase());
+                        }
+
+                        final StringBuilder ethernet_addrbuf2 = new StringBuilder();
+                        for(byte b:mac1) {
+                            if(ethernet_addrbuf2.length()!=0) ethernet_addrbuf2.append(":");
+                            if(b>=0 && b<16) ethernet_addrbuf2.append('0');
+                            ethernet_addrbuf2.append(Integer.toHexString((b<0)? b+256:b).toUpperCase());
+                        }
+
+                        byte[] ip_src_address1 = ((((NILayer)m_layer_mgr.getLayer("NI")).m_adapter_list.get(index1).getAddresses()).get(0)).getAddr().getData();
+                        final StringBuilder ip_addrbuf0 = new StringBuilder();
+                        for(byte b:ip_src_address1) {
+                            if(ip_addrbuf0.length()!=0) ip_addrbuf0.append(".");
+                            ip_addrbuf0.append(b&0xff);
+                        }
+
+                        byte[] ip_src_address2 = ((((NILayer)m_layer_mgr.getLayer("NI")).m_adapter_list.get(index2).getAddresses()).get(0)).getAddr().getData();
+                        final StringBuilder ip_addrbuf1 = new StringBuilder();
+                        for(byte b:ip_src_address2) {
+                            if(ip_addrbuf1.length()!=0) ip_addrbuf1.append(".");
+                            ip_addrbuf1.append(b&0xff);
+                        }
+
+                        System.out.println("NIC1: "+ip_addrbuf0.toString()+" // "+ethernet_addrbuf1.toString());
+                        System.out.println("NIC2: "+ip_addrbuf1.toString()+" // "+ethernet_addrbuf2.toString());
+                        /*IP Address 설정*/
+                        ((IPLayer)m_layer_mgr.getLayer("IP")).setIPSrcAddress(ip_src_address1);
+                        ((IPLayer)m_layer_mgr.getLayer("IP2")).setIPSrcAddress(ip_src_address2);
+                        /*IP Port 설정*/
+                        ((IPLayer)m_layer_mgr.getLayer("IP")).setPort("Port1");
+                        ((IPLayer)m_layer_mgr.getLayer("IP2")).setPort("Port2");
+
+                        /*ARP Address 설정*/
+//                        ((ARPLayer)m_layer_mgr.getLayer("ARP")).setIPAddrSrcAddr(ip_src_address1);
+//                        ((ARPLayer)m_layer_mgr.getLayer("ARP2")).setIPAddrSrcAddr(ip_src_address2);
+
+                        ((ARPLayer) m_layer_mgr.getLayer("ARP")).setHostMacAddr(mac0);
+                        ((ARPLayer) m_layer_mgr.getLayer("ARP2")).setHostMacAddr(mac1);
+
+                        /*Ethernet Mac 주소 설정*/
+                        ((EthernetLayer) m_layer_mgr.getLayer("Ethernet")).setEnetSrcAddress(mac0);
+                        ((EthernetLayer) m_layer_mgr.getLayer("Ethernet2")).setEnetSrcAddress(mac1);
+
+                        /*Receive 실행*/
+                        ((NILayer) m_layer_mgr.getLayer("NI")).setAdapterNumber(index1);
+                        ((NILayer) m_layer_mgr.getLayer("NI2")).setAdapterNumber(index2);
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+
+                    nic_combo_box1.setEnabled(false);
+                    nic_combo_box2.setEnabled(false);
+                    setting_Button.setText("reset");
+                } else {
+                    nic_combo_box1.setEnabled(true);
+                    nic_combo_box2.setEnabled(true);
+                    setting_Button.setText("setting");
+                }
             }
         });
         settingPanel.add(setting_Button);

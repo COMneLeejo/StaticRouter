@@ -1,7 +1,7 @@
 
 import java.util.ArrayList;
 
-public class IPLayer {
+public class IPLayer implements BaseLayer {
     public int number_of_upper_layer = 0;
     public int number_of_under_layer = 0;
     public String present_layer_name = null;
@@ -143,7 +143,7 @@ public class IPLayer {
 
             byte[] bytes = objToByte(ip_header, input, input.length);
 
-            ((ARPLayer)another_ip_layer.getUnderLayer(0)).send(new byte[6], another_ip_layer.ip_header.ip_src_addr, new byte[6], dst_ip, bytes, another_ip_layer.port_name,);
+            ((ARPLayer)another_ip_layer.getUnderLayer(0)).send(new byte[6], another_ip_layer.ip_header.ip_src_addr, new byte[6], dst_ip, bytes, another_ip_layer.port_name);
 
         }
         return false;

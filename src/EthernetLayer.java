@@ -127,6 +127,7 @@ public class EthernetLayer implements BaseLayer {
             m_sHeader.enet_type[0] = (byte) 0x08;
             m_sHeader.enet_type[1] = (byte) 0x06;   //상위 프로토콜 설정(ARP)
         }else {
+            System.out.println("got Ping from IP Layer");
             m_sHeader.enet_type[0] = (byte) 0x08;
             m_sHeader.enet_type[1] = (byte) 0x00;   //상위 프로토콜 설정(IP): data(ping)를 보낼 때
         }
@@ -207,7 +208,7 @@ public class EthernetLayer implements BaseLayer {
 
         if (!isSrcMyAddress(input)) {       //자신이 만든 프레임은 폐기
             if (isBrodcastAddress(input) || isDstMyAddress(input) ) {       //도착지 mac주소가 broAddr이거나 자신의 주소이면
-                data = removeCappHeader(input, input.length)
+                data = removeCappHeader(input, input.length);
                 if (input[12] == (byte)0x08 && input[13] == (byte)0x06){    //ARP
                     ((ARPLayer)this.getUpperLayer(0)).receive(data);
                 }else {                      //IP, 이때 ARP를 거쳐서 왔기 때문에 header가 제대로 안지워질지도
