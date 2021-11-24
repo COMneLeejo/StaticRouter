@@ -1,7 +1,8 @@
 
+
 import java.util.ArrayList;
 
-public class IPLayer {
+public class IPLayer implements BaseLayer {
     public int number_of_upper_layer = 0;
     public int number_of_under_layer = 0;
     public String present_layer_name = null;
@@ -10,8 +11,8 @@ public class IPLayer {
     public ArrayList<BaseLayer> array_of_under_layer = new ArrayList<BaseLayer>();
 
     public final static int size_of_ip_header = 20;             //IP 헤더의 크기
-    public final static int pos_of_ip_src_from_ip_header = 0;  //IP 헤더에서 src IP의 시작위치
-    public final static int pos_of_ip_dst_from_ip_header = 4;  //IP 헤더에서 dst IP의 시작위치
+    public final static int pos_of_ip_src_from_ip_header = 12;  //IP 헤더에서 src IP의 시작위치
+    public final static int pos_of_ip_dst_from_ip_header = 16;  //IP 헤더에서 dst IP의 시작위치
     public final static int size_of_ip_addr = 4;               //IP 주소 크기
 
     public LayerManager layer_manager;
@@ -126,27 +127,55 @@ public class IPLayer {
 
         //dstIP와 내 IP가 같다 = 나에게 온 패킷
         if(areDstIpAndMyAddrTheSame(input)) {
+            System.out.println("something is wrong!! ");
             this.getUpperLayer(0).receive(data);
             return true;
-        } else {
+        }
+        else {
+            System.out.println("to friend IP layer");
+            System.out.println("[IP] check 'input'");
+            check_byte(input);
+            System.out.println("[IP] check 'data'");
+            check_byte(data);
+            byte[] src_ip = new byte[4];//input 확인하고 srcPos값 확인
+            System.arraycopy(input, 12, src_ip, 0, size_of_ip_addr);
+            check_byte(src_ip);
+//            System.out.println(port_name + ": src ip = " + ipByteArrToString(src_ip));
             byte[] dst_ip = new byte[4];//input 확인하고 srcPos값 확인
             System.arraycopy(input, 16, dst_ip, 0, size_of_ip_addr);
+            check_byte(dst_ip);
+//            System.out.println(port_name + ": dst ip = " + ipByteArrToString(dst_ip));
+
 
             Object[] value = routing_table.findEntry(dst_ip);
-            if (value == null) return false;
+            if (value == null) {
+                System.out.println("Null in table!!");
+                return false;
+            }
 
-           byte[] net;
+            byte[] net;
             if ((boolean) value[4]) //flag G is selected
                 net = (byte[]) value[2];
             else
                 net = (byte[]) dst_ip;
 
-            byte[] bytes = objToByte(ip_header, input, input.length);
+//            byte[] bytes = objToByte(ip_header, input, input.length);
+            System.out.println("Let's check IP header info");
+            check_byte(input);
 
-            ((ARPLayer)another_ip_layer.getUnderLayer(0)).send(new byte[6], another_ip_layer.ip_header.ip_src_addr, new byte[6], dst_ip, bytes, another_ip_layer.port_name,);
+            System.out.println("to " + another_ip_layer.port_name + " ARP Layer");
+            ((ARPLayer)another_ip_layer.getUnderLayer(0)).send(new byte[6], src_ip, new byte[6], dst_ip, input, another_ip_layer.port_name);
 
         }
         return false;
+    }
+
+    public void check_byte (byte[] b) {
+        System.out.print(port_name +" = ");
+        for(int i = 0 ; i < b.length; i++) {
+            System.out.print(i + " : " + (b[i] & 0xFF) + " | ");
+        }
+        System.out.println();
     }
 
     public boolean areDstIpAndMyAddrTheSame(byte[] input) {
@@ -160,6 +189,12 @@ public class IPLayer {
             if(input[i + pos_of_ip_src_from_ip_header] != ip_header.ip_src_addr[i]) return false;
         return true;
     }
+
+    public String ipByteArrToString(byte[] ip_byte_arr) {
+        return (ip_byte_arr[0] & 0xFF) + "." + (ip_byte_arr[1] & 0xFF) + "."
+                + (ip_byte_arr[2] & 0xFF) + "." + (ip_byte_arr[3] & 0xFF);
+    }
+
 
     @Override
     public String getLayerName() {

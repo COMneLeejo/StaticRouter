@@ -1,5 +1,6 @@
 
 
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +56,7 @@ public class NILayer implements BaseLayer {
     }
 
     public void setAdapterNumber(int iNum) {
+        System.out.println("initialized");
         m_i_num_adapter = iNum;
         packetStartDriver();
         receive();
@@ -77,6 +79,9 @@ public class NILayer implements BaseLayer {
             System.err.println(m_adapter_object.getErr());
             return false;
         }
+        System.out.println("send packet to host!!");
+
+        System.out.println("total packet length : " + input.length + "\n\n");
         return true;
     }
 
@@ -98,10 +103,13 @@ public class NILayer implements BaseLayer {
             thread = new Receive_Thread(m_adapter_object, (EthernetLayer)this.getUpperLayer(0));
             Thread obj = new Thread(thread);
             obj.start();
-            System.out.println("received from NI");
+            count++;
+            System.out.println("[NI] " + count + " : received from NI");
             return false;
         }
     }
+
+    int count = 0;
 
     @Override
     public void setUnderLayer(BaseLayer pUnderLayer) {
@@ -170,6 +178,7 @@ class Receive_Thread implements Runnable {
             PcapPacketHandler<String> jpacketHandler = new PcapPacketHandler<String>() {
                 public void nextPacket(PcapPacket packet, String user) {
                     data = packet.getByteArray(0, packet.size());
+//                    System.out.println("running");
                     upper_layer.receive(data);
                 }
             };
