@@ -10,7 +10,13 @@ public class EthernetLayer implements BaseLayer {
     private static byte[] arp_mac_dstaddr = null;
 
     public byte[] chat_file_dstaddr;
-    public byte[] ex_ethernet_addr = new byte[6];
+    public byte[] port_ethernet_addr = new byte[6];
+
+    String port_name = "";
+
+    public void setPort(String p) {
+        this.port_name = p;
+    }
 
     private class _ETHERNET_ADDR {
         private byte[] addr = new byte[6];
@@ -45,6 +51,12 @@ public class EthernetLayer implements BaseLayer {
         // super(pName);
         // TODO Auto-generated constructor stub
         p_layer_name = pName;
+
+    }
+
+    public void setPort_ethernet_addr(byte[] portAddress) {
+        // TODO Auto-generated method stub
+        port_ethernet_addr = portAddress;
 
     }
 
@@ -113,29 +125,39 @@ public class EthernetLayer implements BaseLayer {
      * @param length 다른 계층으로부터 받은 data의 길이
      * @return boolean타입
      */
-    public boolean send(byte[] input, int length) {
+    public boolean send(byte[] input, int length, byte[] dstAddr) {
         m_sHeader.enet_data = input;
 
         if (m_sHeader.enet_data != null && m_sHeader.enet_data.length > 1500) {
+            if(m_sHeader.enet_data != null ) {
+                System.out.println("[Eth] ARP data input it is NULL!!!");
+            }
+
+            System.out.println("ETH error");
             return false;
         }
 
         byte[] frame;                           //(Header + input)전체 frame
+        byte[] src_addr = new byte[6];
         byte[] dst_addr = new byte[6];          //도착지 mac주소
 
-        if(length == 28){
+        if(dstAddr == null){
+            System.out.println(port_name + ": [Eth] dstArr is null... ARP is setting");
             m_sHeader.enet_type[0] = (byte) 0x08;
             m_sHeader.enet_type[1] = (byte) 0x06;   //상위 프로토콜 설정(ARP)
+//            src_addr = selectSrcAddress(input);
+            dst_addr = selectDstAddress(input);     //input에서 도착지 mac주소만 골라냄
         }else {
-            System.out.println("got Ping from IP Layer");
+            System.out.println(port_name + ": [Eth] this is Ping!!");
             m_sHeader.enet_type[0] = (byte) 0x08;
             m_sHeader.enet_type[1] = (byte) 0x00;   //상위 프로토콜 설정(IP): data(ping)를 보낼 때
+//            src_addr = port_ethernet_addr;
+            dst_addr = dstAddr;
         }
 
-        dst_addr = selectDstAddress(input);     //input에서 도착지 mac주소만 골라냄
+        System.out.println(port_name + ": [Eth] dstArr is " + macByteArrToString(dst_addr) );
+//        setEnetSrcAddress(src_addr);
         setEnetDstAddress(dst_addr);            //Header에 도착지 mac주소 설정
-
-        System.arraycopy(m_sHeader.enet_srcaddr.addr, 0, ex_ethernet_addr, 0, 6);
 
 //        System.out.println("src mac addr from ETH");
 //        System.out.println(macByteArrToString(src_addr));
@@ -143,9 +165,18 @@ public class EthernetLayer implements BaseLayer {
 //        System.out.println(macByteArrToString(dst_addr));
 
         frame = ObjToByteDATA(m_sHeader, input, length);
+        System.out.println(port_name + ": Eth --> NI");
+
         ((NILayer) getUnderLayer()).send(frame, length + HEADER_SIZE);      //NILayer의 send호출
 
         return true;
+    }
+
+
+    public byte[] selectSrcAddress(byte[] input) {
+        byte[] src_addr = new byte[6];                      //도착지 mac주소
+        System.arraycopy(input, 8, src_addr, 0, 6);
+        return src_addr;
     }
 
     /**
@@ -192,6 +223,8 @@ public class EthernetLayer implements BaseLayer {
         return rebuf;
     }
 
+    int count = 1;
+
     /**
      * 하위 레이어(NI Layer)에서 받은 데이터에서 헤더를 붙여 상위 레이어(ARP Layer)로 보내는 메소드
      *
@@ -201,17 +234,34 @@ public class EthernetLayer implements BaseLayer {
     public boolean receive(byte[] input) {
         byte[] data;
 
-//        System.out.println("recieved dest mac addr");
-//        System.out.println(macByteArrToString(Arrays.copyOfRange(input, 0, 6)));
-//        System.out.println("recieved src mac addr");
-//        System.out.println(macByteArrToString(Arrays.copyOfRange(input, 6, 12)));
+        System.out.println("\n\n" +"[Eth]" + count + " : "+ port_name + ": recieved from NI");
+        count++;
+        System.out.println(port_name + " : recieved dest mac addr");
+        System.out.println(macByteArrToString(Arrays.copyOfRange(input, 0, 6)));
+        System.out.println(port_name + " : recieved src mac addr");
+        System.out.println(macByteArrToString(Arrays.copyOfRange(input, 6, 12)));
 
         if (!isSrcMyAddress(input)) {       //자신이 만든 프레임은 폐기
             if (isBrodcastAddress(input) || isDstMyAddress(input) ) {       //도착지 mac주소가 broAddr이거나 자신의 주소이면
+
                 data = removeCappHeader(input, input.length);
+
                 if (input[12] == (byte)0x08 && input[13] == (byte)0x06){    //ARP
+
+                    System.out.println(port_name + " : MAC --> ARP");
+                    System.out.println(port_name + ": recieved dest mac addr");
+                    System.out.println(macByteArrToString(Arrays.copyOfRange(input, 0, 6)));
+                    System.out.println(port_name + " : recieved src mac addr");
+                    System.out.println(macByteArrToString(Arrays.copyOfRange(input, 6, 12)));
+
                     ((ARPLayer)this.getUpperLayer(0)).receive(data);
-                }else {                      //IP, 이때 ARP를 거쳐서 왔기 때문에 header가 제대로 안지워질지도
+                }else if (input[12] == 0x08 && input[13] == 0x00) {                      //IP, 이때 ARP를 거쳐서 왔기 때문에 header가 제대로 안지워질지도
+                    System.out.println(port_name + " : MAC --> IP");
+                    System.out.println(port_name + ": recieved dest mac addr");
+                    System.out.println(macByteArrToString(Arrays.copyOfRange(input, 0, 6)));
+                    System.out.println(port_name + " : recieved src mac addr");
+                    System.out.println(macByteArrToString(Arrays.copyOfRange(input, 6, 12)));
+
                     ((IPLayer)this.getUpperLayer(1)).receive(data);
                 }
                 return true;
@@ -221,14 +271,14 @@ public class EthernetLayer implements BaseLayer {
     }
 
     /**
-     * 출발지의 mac주소가 ex_ethernet_addr와 같은지 체크하는 메소드
+     * 출발지의 mac주소가 port_ethernet_addr와 같은지 체크하는 메소드
      *
      * @param add 검사받는 input data
      * @return boolean타입
      */
-    public boolean isExEthernetAddress(byte[] add) {
+    public boolean isPortEthernetAddress(byte[] add) {
         for (int i = 0; i < 6; i++) {
-            if (add[i + 6] != ex_ethernet_addr[i]) {
+            if (add[i + 6] != port_ethernet_addr[i]) {
                 return false;
             }
         }

@@ -439,6 +439,10 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
                         ((ARPLayer) m_layer_mgr.getLayer("ARP")).setHostMacAddr(mac0);
                         ((ARPLayer) m_layer_mgr.getLayer("ARP2")).setHostMacAddr(mac1);
 
+                        ((ARPLayer) m_layer_mgr.getLayer("ARP")).setPort("Port1");
+                        ((ARPLayer) m_layer_mgr.getLayer("ARP2")).setPort("Port2");
+
+
                         /*Ethernet Mac 주소 설정*/
                         ((EthernetLayer) m_layer_mgr.getLayer("Ethernet")).setEnetSrcAddress(mac0);
                         ((EthernetLayer) m_layer_mgr.getLayer("Ethernet2")).setEnetSrcAddress(mac1);
@@ -446,6 +450,9 @@ public class ApplicationLayer extends JFrame implements BaseLayer {
                         /*Receive 실행*/
                         ((NILayer) m_layer_mgr.getLayer("NI")).setAdapterNumber(index1);
                         ((NILayer) m_layer_mgr.getLayer("NI2")).setAdapterNumber(index2);
+
+                        ((EthernetLayer) m_layer_mgr.getLayer("Ethernet")).setPort("Port1");
+                        ((EthernetLayer) m_layer_mgr.getLayer("Ethernet2")).setPort("Port2");
                     } catch (IOException e1) {
                         e1.printStackTrace();
                     }

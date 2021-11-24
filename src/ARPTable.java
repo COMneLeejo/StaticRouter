@@ -10,8 +10,8 @@ public class ARPTable {
         this.cache_table = new HashMap<>();
 
         // ARP 테이블 생성 후 타이머 쓰레드 실행
-        Thread thread = new Thread(new CacheTimer(this.cache_table));
-        thread.start();
+//        Thread thread = new Thread(new CacheTimer(this.cache_table));
+//        thread.start();
     }
 
     /**
@@ -52,7 +52,7 @@ public class ARPTable {
             return null;
         }
     }
-    
+
     /**
      * 케시 테이블의 크기 반환
      * @param
@@ -77,7 +77,9 @@ public class ARPTable {
      */
     public void updateCacheTable() {
         // TODO : Application Layer 에서 연동 필요 (textArea 관련)
-        ApplicationLayer.arp_textarea.setText("");
+        if(ApplicationLayer.arp_textarea != null) {
+            ApplicationLayer.arp_textarea.setText("");
+        }
         Set keys = cache_table.keySet();
 
         for (Iterator iterator = keys.iterator(); iterator.hasNext(); ) {
@@ -87,12 +89,14 @@ public class ARPTable {
             if (value[2] == null) {
                 // TODO : Trash 값 없애기
                 //      : Application Layer 에서 연동 필요
-                // ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t trash\n");
-                this.cache_table.remove(key);
+//            	this.cache_table.remove(key);
+//            	System.out.println(key + ": removed key ");
+//                iterator.remove();
+                ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t trash? \t" + value[4] + "\n");
             } else if (value[2].equals("Incomplete")) {
                 // TODO : Port Name 정보 입력 필요
                 //      : Application Layer 에서 연동 필요, port Name 에 대해 처리 필요
-                 ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t incomplete \t " +  value[4] + "\n");
+                ApplicationLayer.arp_textarea.append("       " + key + "\t" + "??????????????\t incomplete \t " +  value[4] + "\n");
             } else {
                 byte[] mac_addr_byte = (byte[]) value[1];
                 String mac_address_string = macByteArrToString(mac_addr_byte);
